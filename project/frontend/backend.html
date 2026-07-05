@@ -1,0 +1,99 @@
+<h2>Department: DevOps</h2>
+<form onsubmit="saveStudent(event)" class="student-form">
+  <input placeholder="Name" id="name" required />
+  <input type="date" id="date" required />
+  <input placeholder="Fees Paid" id="fees" required />
+  <input placeholder="Trainer Name" id="trainer" required />
+  <input placeholder="Company Name" id="company" required />
+  <input value="DevOps" id="department" readonly />
+  <button type="submit">Submit</button>
+</form>
+
+<style>
+  .student-form {
+    max-width: 400px;
+    margin: 0 auto 40px auto;
+    background: #fff;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .student-form input {
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    outline-color: #3498db;
+    transition: border-color 0.3s ease;
+  }
+  .student-form input:focus {
+    border-color: #3498db;
+  }
+  .student-form input[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+  }
+
+  .student-form button {
+    padding: 12px 0;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 8px;
+    background-color: #3498db;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .student-form button:hover {
+    background-color: #2980b9;
+  }
+
+  h2 {
+    text-align: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin-bottom: 20px;
+    color: #2c3e50;
+  }
+
+  @media (max-width: 480px) {
+    .student-form {
+      padding: 20px;
+      max-width: 90%;
+      gap: 12px;
+    }
+    .student-form input, .student-form button {
+      font-size: 1rem;
+      padding: 10px 12px;
+    }
+  }
+</style>
+
+<script>
+  async function saveStudent(e) {
+    e.preventDefault();
+    const res = await fetch('http://a23805e4dd81246caab4cd122c0c0567-1998564976.ap-south-1.elb.amazonaws.com:5000/student', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        name: document.getElementById('name').value,
+        date_of_joining: document.getElementById('date').value,
+        fees_paid: document.getElementById('fees').value,
+        department: document.getElementById('department').value,
+        trainer_name: document.getElementById('trainer').value,
+        company_name: document.getElementById('company').value
+      })
+    });
+
+    const data = await res.json();
+    alert(data.msg);
+    if (res.ok) {
+      window.location.href = 'student.html';
+    }
+  }
+</script>
+

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Students List</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 10px;
+      background: #f9f9f9;
+    }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #3498db;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      th {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+      }
+      tr {
+        margin-bottom: 15px;
+      }
+      td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+      }
+      td::before {
+        position: absolute;
+        left: 15px;
+        width: 45%;
+        white-space: nowrap;
+        content: attr(data-label);
+        font-weight: bold;
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Students Registered</h2>
+  <table id="students-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Date of Joining</th>
+        <th>Fees Paid</th>
+        <th>Department</th>
+        <th>Trainer Name</th>
+        <th>Company Name</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Students data will be inserted here -->
+    </tbody>
+  </table>
+
+  <script>
+    async function loadStudents() {
+      try {
+        const res = await fetch('http://a23805e4dd81246caab4cd122c0c0567-1998564976.ap-south-1.elb.amazonaws.com:5000/students'); // Your backend should expose this API
+        if (!res.ok) throw new Error('Failed to fetch students');
+        const students = await res.json();
+
+        const tbody = document.querySelector('#students-table tbody');
+        tbody.innerHTML = ''; // Clear existing rows
+
+        students.forEach(student => {
+          const tr = document.createElement('tr');
+
+          tr.innerHTML = `
+            <td data-label="Name">${student.name}</td>
+            <td data-label="Date of Joining">${new Date(student.date_of_joining).toLocaleDateString()}</td>
+            <td data-label="Fees Paid">${student.fees_paid}</td>
+            <td data-label="Department">${student.department}</td>
+            <td data-label="Trainer Name">${student.trainer_name}</td>
+            <td data-label="Company Name">${student.company_name}</td>
+          `;
+
+          tbody.appendChild(tr);
+        });
+      } catch (error) {
+    console.error('Error loading students:', error);
+    alert('Error loading students. Check console.');
+      }
+    }
+
+    // Load students when page loads
+    window.onload = loadStudents;
+  </script>
+</body>
+</html>
+
