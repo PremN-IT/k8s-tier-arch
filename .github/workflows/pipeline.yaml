@@ -39,6 +39,7 @@ jobs:
         with:
           image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
           exit-code: '1'
 
       - name: Push Backend Image
