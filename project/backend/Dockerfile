@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11-alpine
 
 # Run as a non-root user for security
 RUN groupadd --system app && useradd --system --gid app --home-dir /app app
