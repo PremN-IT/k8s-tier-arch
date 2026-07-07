@@ -39,49 +39,40 @@ jobs:
         with:
           image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
           severity: HIGH,CRITICAL
-          ignore-unfixed: true
           exit-code: '1'
-      - name: Ensure ECR repository exists
-        run: |
-          aws ecr describe-repositories --repository-names backend --region us-east-1 \
-            || aws ecr create-repository --repository-name backend --region us-east-1
+	
 
       - name: Push Backend Image
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
 
-  build-scan-push-frontend:
+   deploy:
+    needs:
+      - build-scan-push-backend
+     #- build-scan-push-frontend
     runs-on: ubuntu-latest
+    environment:
+      name: production
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure AWS
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build Frontend Image
+      - name: Update kubeconfig
         run: |
-          docker build \
-          -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }} \
-          ./project/frontend
+          aws eks update-kubeconfig \
+          --region ${{ env.AWS_REGION }} \
+          --name ${{ vars.EKS_CLUSTER_NAME }}
 
-      - name: Trivy Scan Frontend
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
-          severity: HIGH,CRITICAL
-          exit-code: '1'
-      - name: Ensure ECR repository exists
+      - name: Deploy to EKS
         run: |
-          aws ecr describe-repositories --repository-names frontend --region us-east-1 \
-            || aws ecr create-repository --repository-name frontend -- region us-east-1
-          
-      - name: Push Frontend Image
-        run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
-
+          kubectl apply -f project/k8s/db-deployment.yaml
+          kubectl apply -f project/k8s/backend-deployment.yaml
+         #kubectl apply -f project/k8s/frontend-deployment.yaml
+          kubectl set image deployment/backend \
+            backend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
+         #kubectl set image deployment/frontend \
+            frontend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
