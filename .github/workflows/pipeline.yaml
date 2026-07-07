@@ -1,65 +1,109 @@
 name: Build and Deploy
+
 on:
   push:
     branches:
       - main
+
 permissions:
   id-token: write
   contents: read
+
 env:
   AWS_REGION: us-east-1
+
 jobs:
+
   build-scan-push-backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
+
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
+
       - name: Build Backend Image
         run: |
           docker build \
           -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }} \
           ./project/backend
+
       - name: Trivy Scan Backend
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
           severity: HIGH,CRITICAL
           exit-code: '1'
-          ignore-unfixed: true
+		  ignore-unfixed: true
+
       - name: Push Backend Image
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
 
+  build-scan-push-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Frontend Image
+        run: |
+          docker build \
+          -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }} \
+          ./project/frontend
+
+      - name: Trivy Scan Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+
+      - name: Push Frontend Image
+        run: |
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
+
   deploy:
     needs:
       - build-scan-push-backend
-      # - build-scan-push-frontend
+      - build-scan-push-frontend
     runs-on: ubuntu-latest
     environment:
       name: production
     steps:
       - uses: actions/checkout@v4
+
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
+
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
           --region ${{ env.AWS_REGION }} \
           --name ${{ vars.EKS_CLUSTER_NAME }}
+
       - name: Deploy to EKS
         run: |
           kubectl apply -f project/k8s/db-deployment.yaml
           kubectl apply -f project/k8s/backend-deployment.yaml
-          # kubectl apply -f project/k8s/frontend-deployment.yaml
+          kubectl apply -f project/k8s/frontend-deployment.yaml
           kubectl set image deployment/backend \
             backend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
-          # kubectl set image deployment/frontend \
-          #   frontend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
+          kubectl set image deployment/frontend \
+            frontend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
