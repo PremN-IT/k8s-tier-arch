@@ -9,7 +9,7 @@ parameters:
   encrypted: "true"
 reclaimPolicy: Retain
 
------------
+---
 
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -23,7 +23,7 @@ spec:
     requests:
       storage: 10Gi
 	  
------------
+---
 
 apiVersion: v1
 kind: ConfigMap
@@ -44,7 +44,7 @@ data:
         department VARCHAR(100), trainer_name VARCHAR(100), company_name VARCHAR(100)
     );
 	
------------
+---
 
 apiVersion: apps/v1
 kind: Deployment
@@ -95,4 +95,4 @@ spec:
   - port: 3306
     targetPort: 3306
 	
--
+
