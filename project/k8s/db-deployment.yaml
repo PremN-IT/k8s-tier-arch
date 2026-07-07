@@ -1,21 +1,24 @@
 apiVersion: v1
-kind: PersistentVolumeClaim
+kind: Secret
 metadata:
-  name: mysql-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: ebs-sc
-  resources:
-    requests:
-      storage: 10Gi
-	  
+  name: mysql-secret
+type: Opaque
+stringData:                      # stringData = plain text in, Kubernetes base64-encodes it for you
+  mysql-root-password: rootpassword
 ---
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mysql-initdb-config
+  name: mysql-config             # non-sensitive connection info lives here
+data:
+  DB_HOST: mysql
+  DB_USER: root
+  DB_NAME: knowledge_acquisition
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config       # schema bootstrap — non-sensitive
 data:
   init.sql: |
     CREATE DATABASE IF NOT EXISTS knowledge_acquisition;
@@ -30,9 +33,19 @@ data:
         name VARCHAR(255), date_of_joining DATE, fees_paid DECIMAL(10,2),
         department VARCHAR(100), trainer_name VARCHAR(100), company_name VARCHAR(100)
     );
-	
 ---
-
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ebs-sc
+  resources:
+    requests:
+      storage: 10Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -43,7 +56,7 @@ spec:
       app: mysql
   replicas: 1
   strategy:
-    type: Recreate            # important for RWO EBS volumes (see note)
+    type: Recreate
   template:
     metadata:
       labels:
@@ -54,7 +67,10 @@ spec:
         image: mysql:5.7
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: rootpassword    # move to a Secret later
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-root-password
         ports:
         - containerPort: 3306
         volumeMounts:
@@ -81,5 +97,3 @@ spec:
   ports:
   - port: 3306
     targetPort: 3306
-	
-
