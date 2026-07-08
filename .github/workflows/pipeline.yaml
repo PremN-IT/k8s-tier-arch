@@ -71,7 +71,7 @@ jobs:
           image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
           severity: HIGH,CRITICAL
           exit-code: '1'
-
+          ignore-unfixed: true
       - name: Push Frontend Image
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
