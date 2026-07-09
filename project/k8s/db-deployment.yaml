@@ -11,6 +11,24 @@ spec:
       storage: 10Gi
 ---
 apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-cleaner
+spec:
+  containers:
+  - name: cleaner
+    image: busybox
+    command: [ "sh", "-c", "rm -rf /mnt/mysql/*; sleep 3600" ]
+    volumeMounts:
+    - name: mysql-data
+      mountPath: /mnt/mysql
+  volumes:
+  - name: mysql-data
+    persistentVolumeClaim:
+      claimName: mysql-pvc-new
+  restartPolicy: Never
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mysql-initdb-config
