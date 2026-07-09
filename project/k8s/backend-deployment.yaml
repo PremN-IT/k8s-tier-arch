@@ -19,7 +19,7 @@ spec:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: "mysql"
+          value: "usermgmtdb.cgvws02g0l7w.us-east-1.rds.amazonaws.com"
         - name: DB_USER
           value: "dbadmin"
         - name: DB_PASSWORD
@@ -39,4 +39,7 @@ spec:
     - protocol: TCP
       port: 5000
       targetPort: 5000
+
+---
+
 
