@@ -21,11 +21,11 @@ spec:
         - name: DB_HOST
           value: "mysql"
         - name: DB_USER
-          value: "root"
+          value: "dbadmin"
         - name: DB_PASSWORD
-          value: "rootpassword"
+          value: "Kavyasree2024"
         - name: DB_NAME
-          value: "knowledge_acquisition"
+          value: "usermgmtdb"
 ---
 apiVersion: v1
 kind: Service
