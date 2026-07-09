@@ -99,7 +99,7 @@ jobs:
 
       - name: Deploy to EKS
         run: |
-          kubectl apply -f project/k8s/db-deployment.yaml
+          kubectl apply -f project/k8s/rds-service.yaml
           kubectl apply -f project/k8s/backend-deployment.yaml
           kubectl apply -f project/k8s/frontend-deployment.yaml
           kubectl set image deployment/backend \
