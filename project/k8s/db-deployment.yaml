@@ -63,7 +63,7 @@ spec:
       volumes:
         - name: mysql-data
           persistentVolumeClaim:
-          claimName: mysql-pvc
+            claimName: mysql-pvc
         - name: initdb
           configMap:
             name: mysql-initdb-config
