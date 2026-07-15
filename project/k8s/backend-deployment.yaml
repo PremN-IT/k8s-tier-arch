@@ -26,13 +26,32 @@ spec:
           value: "Kavyasree2024"
         - name: DB_NAME
           value: "usermgmtdb"
+        readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+        livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+        resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
 spec:
-  type: LoadBalancer  # or NodePort for testing
+  type: ClusterIP  # or NodePort for testing
   selector:
     app: backend
   ports:

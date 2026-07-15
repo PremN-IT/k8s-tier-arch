@@ -13,20 +13,39 @@ spec:
         app: frontend
     spec:
       containers:
-      - name: frontend
-        image: venkateshvgs/frontend-app:latest
-        ports:
-        - containerPort: 80
+        - name: frontend
+          image: venkateshvgs/frontend-app:latest   # pin to a real tag in prod, not :latest
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend-service
 spec:
+  type: ClusterIP
   selector:
     app: frontend
   ports:
-  - port: 80
-    targetPort: 80
-  type: LoadBalancer
+    - port: 80
+      targetPort: 80
 
