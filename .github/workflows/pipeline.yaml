@@ -6,8 +6,8 @@ on:
       - main
 
 permissions:
-  id-token: write
-  contents: read
+  id-token: write        # required for OIDC to AWS
+  contents: write        # required so the tag-bump job can push a commit
 
 env:
   AWS_REGION: us-east-1
@@ -31,16 +31,17 @@ jobs:
       - name: Build Backend Image
         run: |
           docker build \
-          -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }} \
-          ./project/backend
+            -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }} \
+            ./project/backend
 
       - name: Trivy Scan Backend
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0     # pinned, not @master
         with:
           image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
           severity: HIGH,CRITICAL
           exit-code: '1'
           ignore-unfixed: true
+
       - name: Push Backend Image
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
@@ -62,47 +63,51 @@ jobs:
       - name: Build Frontend Image
         run: |
           docker build \
-          -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }} \
-          ./project/frontend
+            -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }} \
+            ./project/frontend
 
       - name: Trivy Scan Frontend
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
           severity: HIGH,CRITICAL
           exit-code: '1'
           ignore-unfixed: true
+
       - name: Push Frontend Image
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
 
-  deploy:
+  # ---------------------------------------------------------------
+  # CD HANDOFF: no kubectl, no cluster credentials.
+  # CI's job ends by writing the new image tag into Git.
+  # ArgoCD (running in-cluster) detects the commit and syncs.
+  # ---------------------------------------------------------------
+  bump-image-tags:
     needs:
       - build-scan-push-backend
       - build-scan-push-frontend
     runs-on: ubuntu-latest
-    environment:
-      name: production
     steps:
       - uses: actions/checkout@v4
-
-      - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
-          aws-region: ${{ env.AWS_REGION }}
+          token: ${{ secrets.GITHUB_TOKEN }}   # lets the job push back
 
-      - name: Update kubeconfig
+      - name: Install yq
         run: |
-          aws eks update-kubeconfig \
-          --region ${{ env.AWS_REGION }} \
-          --name ${{ vars.EKS_CLUSTER_NAME }}
+          sudo wget -qO /usr/local/bin/yq \
+            https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
 
-      - name: Deploy to EKS
+      - name: Bump image tags in Helm values
         run: |
-          kubectl apply -f project/k8s/rds-service.yaml
-          kubectl apply -f project/k8s/backend-deployment.yaml
-          kubectl apply -f project/k8s/frontend-deployment.yaml
-          kubectl set image deployment/backend \
-            backend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
-          kubectl set image deployment/frontend \
-            frontend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
+          yq -i '.image.tag = "${{ github.run_number }}"' charts/backend/values.yaml
+          yq -i '.image.tag = "${{ github.run_number }}"' charts/frontend/values.yaml
+
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add charts/backend/values.yaml charts/frontend/values.yaml
+          git commit -m "ci: bump image tags to ${{ github.run_number }} [skip ci]" || echo "no changes"
+          git push

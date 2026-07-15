@@ -1,0 +1,55 @@
+replicaCount: 1
+
+image:
+  repository: 900840136277.dkr.ecr.us-east-1.amazonaws.com/backend
+  tag: "1"              # CI bumps THIS line via yq (github.run_number)
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP        # ALB targets pods directly, so ClusterIP - never LoadBalancer
+  port: 5000
+
+containerPort: 5000
+
+# Non-secret config. Secrets (DB_USER, DB_PASSWORD) come from an existing k8s Secret,
+# referenced by name below - the actual values NEVER live in this file / in Git.
+# DB_HOST points at the in-cluster ExternalName alias, NOT the raw RDS endpoint.
+env:
+  DB_HOST: "mysql"
+  DB_NAME: "usermgmtdb"
+
+# ExternalName Service: a DNS alias so the app connects to a stable name ("mysql")
+# while the real RDS endpoint lives here in ONE place. Swapping the DB = change this
+# line only, no app redeploy. Set externalName to "" to disable the alias entirely.
+database:
+  serviceName: mysql
+  externalName: "usermgmtdb.cgvws02g0l7w.us-east-1.rds.amazonaws.com"
+
+secret:
+  name: backend-db-credentials   # created out-of-band; keys: DB_USER, DB_PASSWORD
+
+probes:
+  path: /healthz
+  port: 5000
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+ingress:
+  enabled: true
+  groupName: studentmgmt
+  groupOrder: 10            # backend before frontend catch-all
+  scheme: internet-facing
+  path: /api
+  healthcheckPath: /healthz

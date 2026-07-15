@@ -1,0 +1,38 @@
+replicaCount: 1
+
+image:
+  repository: 900840136277.dkr.ecr.us-east-1.amazonaws.com/frontend
+  tag: "1"              # CI bumps THIS line via yq (github.run_number)
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+containerPort: 80
+
+probes:
+  path: /
+  port: 80
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+ingress:
+  enabled: true
+  groupName: studentmgmt
+  groupOrder: 100          # frontend LAST - "/" is the catch-all
+  scheme: internet-facing
+  path: /
+  healthcheckPath: /
