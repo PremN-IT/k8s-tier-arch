@@ -108,6 +108,6 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add charts/backend/values.yaml charts/frontend/values.yaml
+          git add project/charts/backend/values.yaml project/charts/frontend/values.yaml
           git commit -m "ci: bump image tags to ${{ github.run_number }} [skip ci]" || echo "no changes"
           git push
