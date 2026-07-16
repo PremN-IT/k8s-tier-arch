@@ -7,21 +7,17 @@ service:
   type: ClusterIP # ALB targets pods directly, so ClusterIP - never LoadBalancer
   port: 5000
 containerPort: 5000
-# Non-secret config. Secrets (DB_USER, DB_PASSWORD) come from an existing k8s Secret,
-# referenced by name below - the actual values NEVER live in this file / in Git.
-# DB_HOST points at the in-cluster ExternalName alias, NOT the raw RDS endpoint.
 env:
   DB_HOST: "mysql"
   DB_NAME: "usermgmtdb"
-  DB_USER: dbadmin
-  DB_PASSWORD: kavyasree2024
-# ExternalName Service: a DNS alias so the app connects to a stable name ("mysql")
-# while the real RDS endpoint lives here in ONE place. Swapping the DB = change this
-# line only, no app redeploy. Set externalName to "" to disable the alias entirely.
+  DB_USER: ""
+  DB_PASSWORD: ""
+secrets:
+  existingSecret: "backend-secret"
 database:
   serviceName: mysql
   externalName: "usermgmtdb.cgvws02g0l7w.us-east-1.rds.amazonaws.com"
-#probes:
+probes:
 #  path: /healthz
 # port: 5000
 resources:
