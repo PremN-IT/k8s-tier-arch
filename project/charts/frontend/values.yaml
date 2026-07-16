@@ -1,7 +1,7 @@
 replicaCount: 1
 image:
   repository: 900840136277.dkr.ecr.us-east-1.amazonaws.com/frontend
-  tag: "39" # CI bumps THIS line via yq (github.run_number)
+  tag: "40" # CI bumps THIS line via yq (github.run_number)
   pullPolicy: IfNotPresent
 service:
   type: ClusterIP
