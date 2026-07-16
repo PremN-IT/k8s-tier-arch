@@ -10,16 +10,11 @@ containerPort: 5000
 env:
   DB_HOST: "mysql"
   DB_NAME: "usermgmtdb"
-  DB_USER: ""
-  DB_PASSWORD: ""
-secrets:
-  existingSecret: "backend-secret"
+  DB_USER: "dbadmin"
+  DB_PASSWORD: "kavyasree2024"
 database:
   serviceName: mysql
   externalName: "usermgmtdb.cgvws02g0l7w.us-east-1.rds.amazonaws.com"
-probes:
-#  path: /healthz
-# port: 5000
 resources:
   requests:
     cpu: 100m
