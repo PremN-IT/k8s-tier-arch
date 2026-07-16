@@ -28,15 +28,9 @@ spec:
             - name: DB_NAME
               value: {{ .Values.env.DB_NAME | quote }}
             - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.secret.name }}
-                  key: DB_USER
+              value: {{ .Values.secret.name }}
             - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.secret.name }}
-                  key: DB_PASSWORD
+              value: {{ .Values.secret.name }}
           readinessProbe:
             httpGet:
               path: {{ .Values.probes.path }}
