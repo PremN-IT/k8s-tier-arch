@@ -20,7 +20,7 @@ database:
   serviceName: mysql
   externalName: "usermgmtdb.cgvws02g0l7w.us-east-1.rds.amazonaws.com"
 secret:
-  name: dbadmin, Kavyasree@2024 # created out-of-band; keys: DB_USER, DB_PASSWORD
+  name: dbadmin, kavyasree2024 # created out-of-band; keys: DB_USER, DB_PASSWORD
 probes:
   path: /healthz
   port: 5000
