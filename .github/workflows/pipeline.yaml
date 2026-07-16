@@ -35,7 +35,7 @@ jobs:
             ./project/backend
 
       - name: Trivy Scan Backend
-        uses: aquasecurity/trivy-action     # pinned, not @master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/backend:${{ github.run_number }}
           severity: HIGH,CRITICAL
@@ -67,7 +67,7 @@ jobs:
             ./project/frontend
 
       - name: Trivy Scan Frontend
-        uses: aquasecurity/trivy-action
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/frontend:${{ github.run_number }}
           severity: HIGH,CRITICAL
