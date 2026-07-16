@@ -13,15 +13,14 @@ containerPort: 5000
 env:
   DB_HOST: "mysql"
   DB_NAME: "usermgmtdb"
+  DB_USER: dbadmin
+  DB_PASSWORD: kavyasree2024
 # ExternalName Service: a DNS alias so the app connects to a stable name ("mysql")
 # while the real RDS endpoint lives here in ONE place. Swapping the DB = change this
 # line only, no app redeploy. Set externalName to "" to disable the alias entirely.
 database:
   serviceName: mysql
   externalName: "usermgmtdb.cgvws02g0l7w.us-east-1.rds.amazonaws.com"
-secret:
-  DB_USER: dbadmin
-  DB_PASSWORD: kavyasree2024 # created out-of-band; keys: DB_USER, DB_PASSWORD
 probes:
   path: /healthz
   port: 5000

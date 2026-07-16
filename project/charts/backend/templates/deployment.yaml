@@ -28,9 +28,9 @@ spec:
             - name: DB_NAME
               value: {{ .Values.env.DB_NAME | quote }}
             - name: DB_USER
-              value: {{ .Values.secret.name }}
+              value: {{ .Values.env.DB_USER | quote }}
             - name: DB_PASSWORD
-              value: {{ .Values.secret.name }}
+              value: {{ .Values.env.DB_PASSWORD | quote }}
           readinessProbe:
             httpGet:
               path: {{ .Values.probes.path }}
