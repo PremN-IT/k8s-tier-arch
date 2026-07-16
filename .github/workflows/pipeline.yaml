@@ -101,8 +101,8 @@ jobs:
 
       - name: Bump image tags in Helm values
         run: |
-          yq -i '.image.tag = "${{ github.run_number }}"' k8s-tier-arch/project/charts/backend/values.yaml
-          yq -i '.image.tag = "${{ github.run_number }}"' k8s-tier-arch/project/charts/frontend/values.yaml
+          yq -i '.image.tag = "${{ github.run_number }}"' project/charts/backend/values.yaml
+          yq -i '.image.tag = "${{ github.run_number }}"' project/charts/frontend/values.yaml
 
       - name: Commit and push
         run: |

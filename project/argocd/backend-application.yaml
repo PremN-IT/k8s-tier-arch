@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/PremN-IT/k8s-tier-arch.git
-    path: charts/backend
+    path: project/charts/backend
     targetRevision: main
     helm:
       valueFiles:
