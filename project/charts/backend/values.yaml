@@ -21,9 +21,9 @@ env:
 database:
   serviceName: mysql
   externalName: "usermgmtdb.cgvws02g0l7w.us-east-1.rds.amazonaws.com"
-probes:
-  path: /healthz
-  port: 5000
+#probes:
+#  path: /healthz
+# port: 5000
 resources:
   requests:
     cpu: 100m
