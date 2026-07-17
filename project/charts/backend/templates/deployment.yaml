@@ -31,21 +31,5 @@ spec:
               value: {{ .Values.env.DB_USER | quote }}
             - name: DB_PASSWORD
               value: {{ .Values.env.DB_PASSWORD | quote }}
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 5000
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 3
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 5000
-            initialDelaySeconds: 15
-            periodSeconds: 20
-            timeoutSeconds: 2
-            failureThreshold: 3
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
