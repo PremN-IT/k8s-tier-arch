@@ -1,4 +1,4 @@
-replicaCount: 1
+replicaCount: 2
 image:
   repository: 900840136277.dkr.ecr.us-east-1.amazonaws.com/backend
   tag: "43" # CI bumps THIS line via yq (github.run_number)
